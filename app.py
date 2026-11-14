@@ -1,6 +1,7 @@
 
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 # --------------------------------
 # PAGE CONFIGURATION
@@ -485,6 +486,13 @@ elif page == "Case Demonstration":
 
     if "demo_containment" not in st.session_state:
         st.session_state.demo_containment = False
+    if "demo_times" not in st.session_state:
+    st.session_state.demo_times = {
+        "DETECT": None,
+        "DECIDE": None,
+        "CONTAIN": None
+    }
+        
 
     stage = st.session_state.demo_stage
 
@@ -522,9 +530,10 @@ elif page == "Case Demonstration":
     else:
         st.info("The positive culture alert is awaiting registration.")
 
-        if st.button("Complete DETECT stage"):
-            st.session_state.demo_stage = 1
-            st.rerun()
+    if st.button("Complete DETECT stage"):
+        st.session_state.demo_times["DETECT"] = datetime.now()
+        st.session_state.demo_stage = 1
+        st.rerun()
 
     st.divider()
 
@@ -546,6 +555,7 @@ elif page == "Case Demonstration":
 
         if review:
             if st.button("Complete DECIDE stage"):
+                st.session_state.demo_times["DECIDE"] = datetime.now()
                 st.session_state.demo_review = True
                 st.session_state.demo_stage = 2
                 st.rerun()
@@ -573,12 +583,71 @@ elif page == "Case Demonstration":
 
         if containment:
             if st.button("Complete CONTAIN stage"):
+                st.session_state.demo_times["CONTAIN"] = datetime.now()
                 st.session_state.demo_containment = True
                 st.session_state.demo_stage = 3
                 st.rerun()
 
     else:
         st.caption("Complete DECIDE to unlock this stage.")
+
+    # --------------------------------
+    # SIMULATED RESPONSE TIMELINE
+    # --------------------------------
+    st.divider()
+    st.markdown("### Response timeline")
+
+    times = st.session_state.demo_times
+
+    timeline_data = []
+
+    for stage_name in ["DETECT", "DECIDE", "CONTAIN"]:
+        recorded_time = times[stage_name]
+
+        if recorded_time is not None:
+            timeline_data.append({
+                "Stage": stage_name,
+                "Recorded at": recorded_time.strftime("%H:%M:%S"),
+                "Status": "Completed"
+            })
+        else:
+            timeline_data.append({
+                "Stage": stage_name,
+                "Recorded at": "Not recorded",
+                "Status": "Pending"
+            })
+
+    st.dataframe(
+        pd.DataFrame(timeline_data),
+        use_container_width=True,
+        hide_index=True
+    )
+
+    recorded_times = [
+        times[name]
+        for name in ["DETECT", "DECIDE", "CONTAIN"]
+        if times[name] is not None
+    ]
+
+    if len(recorded_times) >= 2:
+        elapsed_seconds = (
+            recorded_times[-1] - recorded_times[0]
+        ).total_seconds()
+
+        st.metric(
+            "Simulated pathway duration",
+            f"{elapsed_seconds / 60:.2f} minutes"
+        )
+
+        st.caption(
+            "Duration is calculated from demonstration button clicks. "
+            "It is not a measurement of real laboratory or clinical response time."
+        )
+
+    st.caption(
+        "Timestamps are generated locally during this demonstration "
+        "and are not permanent clinical records."
+    )
 
     # FINAL SUMMARY
     if st.session_state.demo_stage == 3:
@@ -611,7 +680,12 @@ elif page == "Case Demonstration":
             st.session_state.demo_stage = 0
             st.session_state.demo_review = False
             st.session_state.demo_containment = False
-            st.rerun()
+            st.session_state.demo_times = {
+                 "DETECT": None,
+                 "DECIDE": None,
+                "CONTAIN": None
+             }
+             st.rerun()
 
 # --------------------------------
 # FOOTER
