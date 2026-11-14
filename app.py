@@ -95,6 +95,7 @@ page = st.sidebar.radio(
         "Decide",
         "Contain",
         "Research Performance",
+        "Case Demonstration",
         "About the Project"
     ]
 )
@@ -455,6 +456,162 @@ elif page == "About the Project":
         "The dashboard is an educational implementation prototype. "
         "Its usability and impact would require separate evaluation."
     )
+
+# --------------------------------
+# INTERACTIVE CASE DEMONSTRATION
+# --------------------------------
+elif page == "Case Demonstration":
+
+    st.subheader("Interactive DDC Case Journey")
+
+    st.markdown("""
+    Follow a fictional bloodstream infection alert through
+    the Detect → Decide → Contain pathway.
+    """)
+
+    st.warning(
+        "SIMULATED CASE ONLY. Yeast detected in a blood culture "
+        "does not establish Candida auris infection. "
+        "Species identification and clinical decisions require "
+        "qualified healthcare professionals."
+    )
+
+    # Initialise demonstration progress
+    if "demo_stage" not in st.session_state:
+        st.session_state.demo_stage = 0
+
+    if "demo_review" not in st.session_state:
+        st.session_state.demo_review = False
+
+    if "demo_containment" not in st.session_state:
+        st.session_state.demo_containment = False
+
+    stage = st.session_state.demo_stage
+
+    st.divider()
+
+    st.markdown("### DEMO-004 | Fictional case")
+
+    st.info(
+        "**Laboratory finding:** Yeast detected in a positive "
+        "blood culture.\n\n"
+        "**Species identification:** Pending in this demonstration."
+    )
+
+    # Progress indicator
+    stage_names = [
+        "Detect",
+        "Decide",
+        "Contain",
+        "Completed"
+    ]
+
+    st.progress(stage / 3)
+
+    st.write(
+        f"**Current stage:** {stage_names[stage]}"
+    )
+
+    st.divider()
+
+    # DETECT
+    st.markdown("### 01 | DETECT")
+
+    if stage >= 1:
+        st.success("Laboratory alert recorded in the demonstration.")
+    else:
+        st.info("The positive culture alert is awaiting registration.")
+
+        if st.button("Complete DETECT stage"):
+            st.session_state.demo_stage = 1
+            st.rerun()
+
+    st.divider()
+
+    # DECIDE
+    st.markdown("### 02 | DECIDE")
+
+    if stage >= 2:
+        st.success("Stewardship review recorded.")
+    elif stage == 1:
+        st.info(
+            "The fictional alert is ready for review "
+            "by the qualified stewardship team."
+        )
+
+        review = st.checkbox(
+            "Mark the simulated stewardship review as completed",
+            key="demo_review_checkbox"
+        )
+
+        if review:
+            if st.button("Complete DECIDE stage"):
+                st.session_state.demo_review = True
+                st.session_state.demo_stage = 2
+                st.rerun()
+
+    else:
+        st.caption("Complete DETECT to unlock this stage.")
+
+    st.divider()
+
+    # CONTAIN
+    st.markdown("### 03 | CONTAIN")
+
+    if stage >= 3:
+        st.success("Demonstration readiness review completed.")
+    elif stage == 2:
+        st.info(
+            "Review the infection-control readiness items "
+            "in accordance with applicable hospital protocols."
+        )
+
+        containment = st.checkbox(
+            "Mark the simulated infection-control readiness review as completed",
+            key="demo_containment_checkbox"
+        )
+
+        if containment:
+            if st.button("Complete CONTAIN stage"):
+                st.session_state.demo_containment = True
+                st.session_state.demo_stage = 3
+                st.rerun()
+
+    else:
+        st.caption("Complete DECIDE to unlock this stage.")
+
+    # FINAL SUMMARY
+    if st.session_state.demo_stage == 3:
+
+        st.divider()
+        st.success("DDC demonstration journey completed!")
+
+        st.markdown("### Case summary")
+
+        summary = {
+            "Case ID": ["DEMO-004"],
+            "DETECT": ["Completed"],
+            "DECIDE": ["Completed"],
+            "CONTAIN": ["Completed"],
+            "Data type": ["Fictional"]
+        }
+
+        st.dataframe(
+            pd.DataFrame(summary),
+            use_container_width=True,
+            hide_index=True
+        )
+
+        st.caption(
+            "Completion represents a simulated workflow demonstration, "
+            "not confirmation of clinical treatment or infection control."
+        )
+
+        if st.button("Reset demonstration"):
+            st.session_state.demo_stage = 0
+            st.session_state.demo_review = False
+            st.session_state.demo_containment = False
+            st.rerun()
 
 # --------------------------------
 # FOOTER
