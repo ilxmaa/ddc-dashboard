@@ -677,16 +677,16 @@ elif page == "Case Demonstration":
             "not confirmation of clinical treatment or infection control."
         )
 
-        if st.button("Reset demonstration"):
-            st.session_state.demo_stage = 0
-            st.session_state.demo_review = False
-            st.session_state.demo_containment = False
-            st.session_state.demo_times = {
-                 "DETECT": None,
-                 "DECIDE": None,
-                "CONTAIN": None
-             }
-             st.rerun()
+if st.button("Reset demonstration"):
+    st.session_state.demo_stage = 0
+    st.session_state.demo_review = False
+    st.session_state.demo_containment = False
+    st.session_state.demo_times = {
+        "DETECT": None,
+        "DECIDE": None,
+        "CONTAIN": None
+    }
+    st.rerun()
 
 # --------------------------------
 # FOOTER
