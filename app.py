@@ -486,8 +486,9 @@ elif page == "Case Demonstration":
 
     if "demo_containment" not in st.session_state:
         st.session_state.demo_containment = False
+        
     if "demo_times" not in st.session_state:
-    st.session_state.demo_times = {
+        st.session_state.demo_times = {
         "DETECT": None,
         "DECIDE": None,
         "CONTAIN": None
