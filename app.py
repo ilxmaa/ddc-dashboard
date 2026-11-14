@@ -1,140 +1,207 @@
 
 import streamlit as st
+import pandas as pd
 
+# --------------------------------
+# PAGE CONFIGURATION
+# --------------------------------
 st.set_page_config(
-    page_title="DDC Dashboard",
+    page_title="DDC | Clinical Response Monitor",
     page_icon="🩺",
     layout="wide"
 )
 
-# -----------------------------
-# DEMONSTRATION DATA ONLY
-# -----------------------------
+# --------------------------------
+# PROFESSIONAL DESIGN
+# --------------------------------
+st.markdown("""
+<style>
+.stApp {
+    background-color: #F5F8FC;
+}
+[data-testid="stSidebar"] {
+    background-color: #EAF1F8;
+}
+h1, h2, h3 {
+    color: #17365D;
+}
+div[data-testid="stMetric"] {
+    background: white;
+    padding: 17px;
+    border-radius: 12px;
+    border: 1px solid #DFE7F0;
+}
+.ddc-subtitle {
+    color: #62748A;
+    font-size: 15px;
+}
+.ddc-note {
+    background: #EAF2FA;
+    padding: 14px;
+    border-radius: 9px;
+    color: #244568;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --------------------------------
+# DEMONSTRATION DATA
+# --------------------------------
 if "cases" not in st.session_state:
     st.session_state.cases = [
         {
             "Case ID": "DEMO-001",
-            "Sample": "Blood culture",
-            "Lab alert": "Gram-negative bacilli",
+            "Laboratory alert": "Gram-negative bacilli",
+            "Stage": "Detect",
             "Status": "Awaiting review",
             "Elapsed hours": 2
         },
         {
             "Case ID": "DEMO-002",
-            "Sample": "Blood culture",
-            "Lab alert": "Yeast detected",
+            "Laboratory alert": "Yeast detected",
+            "Stage": "Decide",
             "Status": "Under review",
             "Elapsed hours": 1
         },
         {
             "Case ID": "DEMO-003",
-            "Sample": "Blood culture",
-            "Lab alert": "Gram-positive cocci",
+            "Laboratory alert": "Gram-positive cocci",
+            "Stage": "Decide",
             "Status": "Review completed",
             "Elapsed hours": 4
         }
     ]
 
-if "containment_checks" not in st.session_state:
-    st.session_state.containment_checks = {
+if "checks" not in st.session_state:
+    st.session_state.checks = {
         "Isolation readiness reviewed": False,
         "Infection-control team notified": False,
         "Environmental cleaning plan reviewed": False,
         "Contact screening process reviewed": False
     }
 
-# -----------------------------
-# SIDEBAR
-# -----------------------------
-st.sidebar.title("🩺 DDC Dashboard")
-st.sidebar.caption("Detect • Decide • Contain")
+# --------------------------------
+# SIDEBAR NAVIGATION
+# --------------------------------
+st.sidebar.title("🩺 DDC")
+st.sidebar.caption("CLINICAL RESPONSE MONITOR")
+st.sidebar.divider()
 
 page = st.sidebar.radio(
-    "Navigation",
-    ["Overview", "1. Detect", "2. Decide", "3. Contain"]
+    "NAVIGATION",
+    [
+        "Dashboard",
+        "Detect",
+        "Decide",
+        "Contain",
+        "Research Performance",
+        "About the Project"
+    ]
 )
 
 st.sidebar.divider()
-st.sidebar.info(
-    "Educational prototype using fictional demonstration data. "
-    "Not for clinical diagnosis or treatment decisions."
-)
+st.sidebar.caption("MEDly MERIT 2026")
+st.sidebar.caption("Educational research prototype")
 
-# -----------------------------
-# HEADER
-# -----------------------------
+# --------------------------------
+# MAIN HEADER
+# --------------------------------
 st.title("Detect → Decide → Contain")
-st.caption(
-    "A demonstration dashboard for a rapid laboratory alert, "
-    "stewardship review and infection-control readiness pathway."
+st.markdown(
+    '<p class="ddc-subtitle">'
+    'A rapid laboratory alert, antimicrobial stewardship '
+    'and infection-control readiness pathway.'
+    '</p>',
+    unsafe_allow_html=True
 )
 
 st.warning(
-    "DEMO ONLY — All cases are fictional. "
-    "This prototype does not provide medical advice or prescribe treatment."
+    "EDUCATIONAL DEMONSTRATION ONLY — "
+    "All records are fictional. This application does not "
+    "diagnose infections or recommend antimicrobial treatment."
 )
 
-# -----------------------------
-# OVERVIEW
-# -----------------------------
-if page == "Overview":
+# --------------------------------
+# DASHBOARD
+# --------------------------------
+if page == "Dashboard":
 
-    st.subheader("Project overview")
+    st.subheader("Clinical response overview")
 
     cases = st.session_state.cases
-    open_alerts = sum(
-        case["Status"] != "Review completed" for case in cases
+
+    total = len(cases)
+    pending = sum(
+        c["Status"] != "Review completed" for c in cases
     )
     completed = sum(
-        case["Status"] == "Review completed" for case in cases
+        c["Status"] == "Review completed" for c in cases
     )
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Total demo alerts", len(cases))
-    col2.metric("Awaiting / in review", open_alerts)
-    col3.metric("Reviews completed", completed)
+    col1.metric("Total demo alerts", total)
+    col2.metric("Pending reviews", pending)
+    col3.metric("Completed reviews", completed)
 
     st.divider()
 
-    st.subheader("The three-stage pathway")
+    st.subheader("The DDC response pathway")
 
-    col1, col2, col3 = st.columns(3)
+    a, b, c = st.columns(3)
 
-    with col1:
-        st.info("### 1. DETECT\n\nRecord a positive blood-culture alert and its laboratory information.")
-
-    with col2:
-        st.warning("### 2. DECIDE\n\nTrack whether the antimicrobial stewardship team has reviewed the alert.")
-
-    with col3:
-        st.success("### 3. CONTAIN\n\nReview infection-control readiness and response steps.")
-
-    st.subheader("Demonstration alerts")
-    st.dataframe(cases, use_container_width=True)
-
-# -----------------------------
-# DETECT
-# -----------------------------
-elif page == "1. Detect":
-
-    st.subheader("🔎 DETECT — Laboratory alerts")
-
-    st.write(
-        "Record a fictional positive blood-culture alert "
-        "for demonstration purposes."
-    )
-
-    with st.form("new_alert_form"):
-        case_id = st.text_input("Demo case ID", placeholder="DEMO-004")
-
-        sample = st.selectbox(
-            "Sample type",
-            ["Blood culture"]
+    with a:
+        st.info(
+            "### 01 | DETECT\n"
+            "Record a positive culture alert and "
+            "communicate the laboratory finding."
         )
 
-        lab_alert = st.selectbox(
-            "Demonstration laboratory alert",
+    with b:
+        st.warning(
+            "### 02 | DECIDE\n"
+            "Track timely review by the antimicrobial "
+            "stewardship team."
+        )
+
+    with c:
+        st.success(
+            "### 03 | CONTAIN\n"
+            "Review infection-control readiness "
+            "and response processes."
+        )
+
+    st.divider()
+
+    st.subheader("Demonstration case register")
+    st.dataframe(
+        pd.DataFrame(cases),
+        use_container_width=True,
+        hide_index=True
+    )
+
+# --------------------------------
+# DETECT
+# --------------------------------
+elif page == "Detect":
+
+    st.subheader("01 | DETECT")
+    st.write("Laboratory alert registration")
+
+    st.info(
+        "Purpose: demonstrate how a positive blood-culture "
+        "alert could enter the proposed response pathway."
+    )
+
+    with st.form("alert_form"):
+
+        case_id = st.text_input(
+            "Demonstration case ID",
+            placeholder="DEMO-004"
+        )
+
+        alert = st.selectbox(
+            "Laboratory finding",
             [
                 "Gram-negative bacilli",
                 "Gram-positive cocci",
@@ -144,57 +211,67 @@ elif page == "1. Detect":
         )
 
         elapsed = st.number_input(
-            "Hours since positive alert",
+            "Illustrative elapsed time (hours)",
             min_value=0,
             max_value=168,
             value=1
         )
 
-        submitted = st.form_submit_button("Add demonstration alert")
+        submit = st.form_submit_button(
+            "Register demonstration alert"
+        )
 
-        if submitted:
+        if submit:
             if not case_id.strip():
-                st.error("Please enter a demo case ID.")
-            elif any(c["Case ID"] == case_id for c in st.session_state.cases):
-                st.error("That demo case ID already exists.")
+                st.error("Enter a demonstration case ID.")
+            elif any(
+                x["Case ID"] == case_id.strip()
+                for x in st.session_state.cases
+            ):
+                st.error("This case ID already exists.")
             else:
                 st.session_state.cases.append({
                     "Case ID": case_id.strip(),
-                    "Sample": sample,
-                    "Lab alert": lab_alert,
+                    "Laboratory alert": alert,
+                    "Stage": "Detect",
                     "Status": "Awaiting review",
                     "Elapsed hours": elapsed
                 })
-                st.success("Demonstration alert added!")
+                st.success("Demonstration alert registered.")
                 st.rerun()
 
     st.divider()
-    st.subheader("Recorded alerts")
-    st.dataframe(st.session_state.cases, use_container_width=True)
+    st.subheader("Registered alerts")
+    st.dataframe(
+        pd.DataFrame(st.session_state.cases),
+        use_container_width=True,
+        hide_index=True
+    )
 
-# -----------------------------
+# --------------------------------
 # DECIDE
-# -----------------------------
-elif page == "2. Decide":
+# --------------------------------
+elif page == "Decide":
 
-    st.subheader("🧠 DECIDE — Stewardship review tracking")
+    st.subheader("02 | DECIDE")
+    st.write("Antimicrobial stewardship review tracking")
 
-    st.write(
-        "This section records review progress. "
-        "It does not recommend or select antimicrobial treatment."
+    st.info(
+        "This module records review progress. "
+        "It does not select antibiotics or provide treatment advice."
     )
 
     cases = st.session_state.cases
 
     if cases:
-        case_ids = [case["Case ID"] for case in cases]
+        case_ids = [x["Case ID"] for x in cases]
 
-        selected_case = st.selectbox(
-            "Select a demonstration case",
+        selected = st.selectbox(
+            "Select demonstration case",
             case_ids
         )
 
-        selected_status = st.selectbox(
+        status = st.selectbox(
             "Review status",
             [
                 "Awaiting review",
@@ -203,76 +280,188 @@ elif page == "2. Decide":
             ]
         )
 
-        if st.button("Update review status"):
+        if st.button("Update review record"):
             for case in st.session_state.cases:
-                if case["Case ID"] == selected_case:
-                    case["Status"] = selected_status
+                if case["Case ID"] == selected:
+                    case["Status"] = status
+                    case["Stage"] = "Decide"
 
-            st.success("Review status updated!")
+            st.success("Review record updated.")
             st.rerun()
 
     st.divider()
-    st.subheader("Stewardship review register")
-    st.dataframe(st.session_state.cases, use_container_width=True)
 
-    st.info(
-        "In a real hospital pathway, clinical decisions would remain "
-        "the responsibility of qualified healthcare professionals."
+    st.subheader("Stewardship register")
+    st.dataframe(
+        pd.DataFrame(st.session_state.cases),
+        use_container_width=True,
+        hide_index=True
     )
 
-# -----------------------------
+    st.caption(
+        "Clinical decisions remain the responsibility "
+        "of qualified healthcare professionals."
+    )
+
+# --------------------------------
 # CONTAIN
-# -----------------------------
-elif page == "3. Contain":
+# --------------------------------
+elif page == "Contain":
 
-    st.subheader("🛡️ CONTAIN — Infection-control readiness")
-
-    st.write(
-        "A demonstration checklist for reviewing preparedness "
-        "if Candida auris is suspected or confirmed."
-    )
+    st.subheader("03 | CONTAIN")
+    st.write("Infection-control readiness checklist")
 
     st.warning(
-        "This is a preparedness checklist, not a substitute "
-        "for local infection-control protocols or specialist advice."
+        "Preparedness demonstration for suspected or confirmed "
+        "Candida auris. Follow local infection-control protocols "
+        "in actual healthcare settings."
     )
 
-    for item in st.session_state.containment_checks:
-        st.session_state.containment_checks[item] = st.checkbox(
+    items = list(st.session_state.checks.keys())
+
+    for i, item in enumerate(items):
+        checked = st.checkbox(
             item,
-            value=st.session_state.containment_checks[item]
+            value=st.session_state.checks[item],
+            key=f"containment_{i}"
         )
+        st.session_state.checks[item] = checked
 
-    completed_checks = sum(
-        st.session_state.containment_checks.values()
-    )
-    total_checks = len(st.session_state.containment_checks)
+    completed = sum(st.session_state.checks.values())
+    total_checks = len(items)
 
     st.divider()
     st.subheader("Readiness progress")
 
-    st.progress(completed_checks / total_checks)
+    st.progress(completed / total_checks)
 
     st.metric(
-        "Checklist items reviewed",
-        f"{completed_checks} / {total_checks}"
+        "Checklist completion",
+        f"{completed}/{total_checks}"
     )
 
-    if completed_checks == total_checks:
-        st.success("All demonstration checklist items have been reviewed.")
+    if completed == total_checks:
+        st.success("All demonstration checklist items reviewed.")
     else:
-        st.info("Some checklist items are still pending.")
+        st.info("Some readiness items remain unreviewed.")
+
+# --------------------------------
+# RESEARCH PERFORMANCE
+# --------------------------------
+elif page == "Research Performance":
+
+    st.subheader("Research performance indicators")
+
+    st.markdown(
+        "### Proposed study targets"
+    )
 
     st.caption(
-        "Actual isolation, screening and environmental measures "
-        "must follow hospital policy and expert guidance."
+        "These are protocol targets, not observed or validated results."
     )
 
-# -----------------------------
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Time to appropriate therapy",
+        "5 hours",
+        help="Proposed reduction compared with baseline."
+    )
+
+    col2.metric(
+        "Containment response",
+        "Within 4 hours",
+        help="Proposed response-time target."
+    )
+
+    col3.metric(
+        "Recommendation adherence",
+        "≥80%",
+        help="Proposed stewardship recommendation adherence."
+    )
+
+    st.divider()
+
+    st.subheader("Illustrative response-time data")
+
+    chart_data = pd.DataFrame(
+        {
+            "Illustrative hours": [1, 2, 4]
+        },
+        index=["Detect", "Decide", "Contain"]
+    )
+
+    st.bar_chart(chart_data)
+
+    st.caption(
+        "Synthetic example values for interface demonstration only. "
+        "They are not clinical study findings."
+    )
+
+    st.subheader("Suggested study outcomes")
+
+    st.markdown("""
+    - Time from positive blood culture to appropriate therapy
+    - Time from laboratory alert to stewardship review
+    - Time to infection-control response
+    - Proportion of recommendations followed
+    - Feasibility and implementation costs
+    """)
+
+# --------------------------------
+# ABOUT THE PROJECT
+# --------------------------------
+elif page == "About the Project":
+
+    st.subheader("About the research project")
+
+    st.markdown("""
+    **Working title**
+
+    Detect → Decide → Contain: A rapid-diagnostics and
+    antimicrobial-stewardship pathway for bloodstream infections,
+    with Candida auris readiness.
+
+    ### Research rationale
+
+    Delays in communicating microbiology results and coordinating
+    clinical review may affect timely infection management.
+    A structured response pathway may improve coordination.
+
+    ### Research objectives
+
+    1. Improve communication of positive blood-culture alerts.
+    2. Support timely antimicrobial stewardship review.
+    3. Strengthen infection-control preparedness.
+    4. Evaluate feasibility and response-time indicators.
+
+    ### Proposed methodology
+
+    A single-centre before-and-after pilot study:
+
+    - Six-month retrospective baseline period.
+    - Six-month prospective intervention period.
+    - Comparison of selected process indicators.
+    - Feasibility and implementation assessment.
+
+    ### Three intervention components
+
+    - DETECT: Laboratory notification.
+    - DECIDE: Stewardship review and follow-up.
+    - CONTAIN: Infection-control readiness.
+    """)
+
+    st.info(
+        "The dashboard is an educational implementation prototype. "
+        "Its usability and impact would require separate evaluation."
+    )
+
+# --------------------------------
 # FOOTER
-# -----------------------------
+# --------------------------------
 st.divider()
+
 st.caption(
-    "DDC Dashboard | Educational research prototype | "
-    "Fictional data only"
+    "DDC Dashboard | MEDly MERIT 2026 | "
+    "Educational prototype | Fictional data only"
 )
